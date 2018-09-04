@@ -1,0 +1,66 @@
+series: xenial
+machines:
+  "0":
+    series: xenial
+  "1":
+    series: xenial
+  "2":
+    series: xenial
+  "3":
+    series: xenial
+  "4":
+    series: xenial
+  "5":
+    series: xenial
+  "6":
+    series: xenial
+  "7":
+    series: xenial
+  "8":
+    series: xenial
+applications:
+  swift-proxy:
+    charm: cs:xenial/swift-proxy
+    num_units: 3
+    vip: 192.168.110.11
+    to:
+    - lxd:0
+    - lxd:3
+    - lxd:6
+  swift-zone1:
+    charm: cs:xenial/swift-storage
+    num_units: 3
+    options:
+      block-device: sdb sdc sdd sde sdf
+      zone: 1
+    to:
+    - 0
+    - 1
+    - 2
+  swift-zone2:
+    charm: cs:xenial/swift-storage
+    num_units: 3
+    options:
+      block-device: sdb sdc sdd sde sdf
+      zone: 2
+    to:
+    - 3
+    - 4
+    - 5
+  swift-zone3:
+    charm: cs:xenial/swift-storage
+    num_units: 3
+    options:
+      block-device: sdb sdc sdd sde sdf
+      zone: 3
+    to:
+    - 6
+    - 7
+    - 8
+  hacluster-swift:
+    charm: cs:xenial/hacluster
+relations:
+  - [ swift-proxy, swift-zone1 ]
+  - [ swift-proxy, swift-zone2 ]
+  - [ swift-proxy, swift-zone3 ]
+  - [ swift-proxy, hacluster-swift ]
