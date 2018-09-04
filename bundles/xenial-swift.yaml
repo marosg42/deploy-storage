@@ -22,7 +22,8 @@ applications:
   swift-proxy:
     charm: cs:xenial/swift-proxy
     num_units: 3
-    vip: 192.168.110.11
+    options:
+      vip: 192.168.110.11
     to:
     - lxd:0
     - lxd:3
