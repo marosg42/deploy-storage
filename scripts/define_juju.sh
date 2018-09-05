@@ -29,6 +29,8 @@ $GRAPHICS $CONTROLLER --name ${1}${2} --ram $3 --vcpus 2 $CPUOPTS \
 > ${1}${2}.xml
 
 virsh define ${1}${2}.xml
+set +x
+
 }
 
 define juju- 1 4096 $(date +"%y %m %H %M %S")

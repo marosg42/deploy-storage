@@ -39,6 +39,9 @@ $GRAPHICS $CONTROLLER --name ${1}${2} --ram $3 --vcpus 2 $CPUOPTS \
 > ${1}${2}.xml
 
 virsh define ${1}${2}.xml
+
+set +x
+
 }
 
 for i in $(seq 1 9); do
