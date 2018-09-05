@@ -1,29 +1,38 @@
 series: xenial
 machines:
   "0":
+    constraints: tags=swift
     series: xenial
   "1":
+    constraints: tags=swift
     series: xenial
   "2":
+    constraints: tags=swift
     series: xenial
   "3":
+    constraints: tags=swift
     series: xenial
   "4":
+    constraints: tags=swift
     series: xenial
   "5":
+    constraints: tags=swift
     series: xenial
   "6":
+    constraints: tags=swift
     series: xenial
   "7":
+    constraints: tags=swift
     series: xenial
   "8":
+    constraints: tags=swift
     series: xenial
 applications:
   swift-proxy:
     charm: cs:xenial/swift-proxy
     num_units: 3
     options:
-      vip: 192.168.110.11
+      vip: "192.168.110.11"
     to:
     - lxd:0
     - lxd:3
