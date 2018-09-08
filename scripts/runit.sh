@@ -51,6 +51,8 @@ profiles:
 cluster: null
 EOF
 
+sleep 10
+
 sudo adduser ubuntu lxd >> $LOG 2>&1
 
 sg lxd -c "deploy-storage/scripts/runit1.sh"
