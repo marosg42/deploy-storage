@@ -204,11 +204,11 @@ lxc exec maas -- maas maas-root tags create name=swift >> $LOG 2>&1
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="ceph" >> $LOG 2>&1
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="swift" >> $LOG 2>&1
 set +x
-machines=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=ceph${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
-machines=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=swift${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
+machines_ceph=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=ceph${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
+machines_swift=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=swift${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
 set -x
-for i in $machines; do lxc exec maas -- maas maas-root tag update-nodes ceph add=${i}; done >> $LOG 2>&1
-for i in $machines; do lxc exec maas -- maas maas-root tag update-nodes swift add=${i}; done >> $LOG 2>&1
+for i in $machines_ceph; do lxc exec maas -- maas maas-root tag update-nodes ceph add=${i}; done >> $LOG 2>&1
+for i in $machines_swift; do lxc exec maas -- maas maas-root tag update-nodes swift add=${i}; done >> $LOG 2>&1
 
 # commision all
 lxc exec maas -- maas maas-root machines accept-all >> $LOG 2>&1
