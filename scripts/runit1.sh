@@ -195,7 +195,7 @@ lxc exec maas -- bash -c "rc=1;while  [ \$rc -ne 0 ] ; do  sleep 10;  maas maas-
 machine=$(lxc exec maas -- bash -c "maas maas-root machines read hostname=juju-1|grep system_id|cut -d \\\" -f 4|head -n 1") >> $LOG 2>&1
 lxc exec maas -- maas maas-root tag update-nodes juju add=${machine} >> $LOG 2>&1
 export no_proxy=${no_proxy},$(echo 192.168.110.{1..255} | sed 's/ /,/g'),192.168.100.2 >> $LOG 2>&1
-juju bootstrap maas-kvm juju-kvm --config http-proxy="http://100.107.0.4:1080" --config https-proxy="http://100.107.0.4:1080" --config no-proxy=192.168.100.2,$(echo 192.168.110.{1..255} | sed 's/ /,/g') --bootstrap-series=bionic --bootstrap-constraints "tags=juju" >> $LOG 2>&1
+juju bootstrap maas-kvm juju-kvm --config http-proxy="http://100.107.0.4:1080" --config https-proxy="http://100.107.0.4:1080" --config no-proxy=192.168.100.2,127.0.0.1,$(echo 192.168.110.{1..255} | sed 's/ /,/g') --bootstrap-series=bionic --bootstrap-constraints "tags=juju" >> $LOG 2>&1
 
 sg libvirtd -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
 
