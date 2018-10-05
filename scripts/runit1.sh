@@ -198,17 +198,22 @@ export no_proxy=${no_proxy},$(echo 192.168.110.{1..255} | sed 's/ /,/g'),192.168
 juju bootstrap maas-kvm juju-kvm --config http-proxy="http://100.107.0.4:1080" --config https-proxy="http://100.107.0.4:1080" --config no-proxy=192.168.100.2,127.0.0.1,$(echo 192.168.110.{1..255} | sed 's/ /,/g') --bootstrap-series=bionic --bootstrap-constraints "tags=juju" >> $LOG 2>&1
 
 sg libvirtd -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
+sg libvirtd -c deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
 
 lxc exec maas -- maas maas-root tags create name=ceph >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=swift >> $LOG 2>&1
+lxc exec maas -- maas maas-root tags create name=monitoring >> $LOG 2>&1
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="ceph" >> $LOG 2>&1
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="swift" >> $LOG 2>&1
+lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="monitoring" >> $LOG 2>&1
 set +x
 machines_ceph=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=ceph${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
 machines_swift=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=swift${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
+machines_monitoring=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=monitoring${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
 set -x
-for i in $machines_ceph; do lxc exec maas -- maas maas-root tag update-nodes ceph add=${i}; done >> $LOG 2>&1
-for i in $machines_swift; do lxc exec maas -- maas maas-root tag update-nodes swift add=${i}; done >> $LOG 2>&1
+for i in ${machines_ceph}; do lxc exec maas -- maas maas-root tag update-nodes ceph add=${i}; done >> $LOG 2>&1
+for i in ${machines_swift}; do lxc exec maas -- maas maas-root tag update-nodes swift add=${i}; done >> $LOG 2>&1
+for i in ${machines_monitoring}; do lxc exec maas -- maas maas-root tag update-nodes monitoring add=${i}; done >> $LOG 2>&1
 
 # commision all
 lxc exec maas -- maas maas-root machines accept-all >> $LOG 2>&1
@@ -218,6 +223,7 @@ sleep 10
 
 juju deploy deploy-storage/bundles/xenial-ceph.yaml >> $LOG 2>&1
 juju deploy deploy-storage/bundles/xenial-swift.yaml >> $LOG 2>&1
+juju deploy deploy-storage/bundles/xenial-monitoring.yaml >> $LOG 2>&1 
 
 set +x
 watch -c -- juju status --color
