@@ -13,17 +13,15 @@ applications:
   prometheus2:
     charm: cs:xenial/prometheus2
     num_units: 1
-    options:
-      vip: "192.168.110.11"
     to:
-    - 0
+    - "0"
   telegraf:
     charm: cs:xenial/telegraf
   prometheus-ceph-exporter:
     charm: cs:xenial/prometheus-ceph-exporter
     num_units: 1
     to:
-    - 1
+    - "1"
   grafana:
     charm: cs:xenial/grafana
     num_units: 1
@@ -34,14 +32,14 @@ applications:
       snap_proxy: http://100.107.0.4:1080 
       admin_password: zlinux
     to:
-    - 2
+    - "2"
 relations:
-  - [ prometheus-ceph-exporter, ceph-mon:client ]
-  - [ prometheus-ceph-exporter:ceph-exporter, prometheus2:target ]
-  - [ prometheus2:grafana-source, grafana:grafana-source ]
-  - [ telegraf:prometheus-client, prometheus2:target ]
+#  - [ prometheus-ceph-exporter, "ceph-mon:client" ]
+  - [ "prometheus-ceph-exporter:ceph-exporter", "prometheus2:target" ]
+  - [ "prometheus2:grafana-source", "grafana:grafana-source" ]
+  - [ "telegraf:prometheus-client", "prometheus2:target" ]
   - [ telegraf, prometheus-ceph-exporter  ]
-  - [ telegraf, ceph-mon ]
-  - [ telegraf, ceph-osd ]
+#  - [ telegraf, ceph-mon ]
+#  - [ telegraf, ceph-osd ]
   - [ telegraf, grafana ]
-  - [ telegraf:juju-info, prometheus2 ]
+  - [ "telegraf:juju-info", prometheus2 ]
