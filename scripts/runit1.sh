@@ -224,6 +224,9 @@ sleep 10
 juju deploy deploy-storage/bundles/xenial-ceph.yaml >> $LOG 2>&1
 juju deploy deploy-storage/bundles/xenial-swift.yaml >> $LOG 2>&1
 juju deploy deploy-storage/bundles/xenial-monitoring.yaml >> $LOG 2>&1 
+juju relate prometheus-ceph-exporter ceph-mon:client >> $LOG 2>&1
+juju relate telegraf ceph-mon >> $LOG 2>&1
+juju relate telegraf ceph-osd >> $LOG 2>&1
 
 set +x
 watch -c -- juju status --color
