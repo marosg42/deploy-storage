@@ -26,18 +26,6 @@ devices:
     parent: maasbr1
     type: nic
   eth2:
-    ipv4.address: 192.168.112.2
-    name: eth2
-    nictype: bridged
-    parent: maasbr2
-    type: nic
-  eth3:
-    ipv4.address: 192.168.113.2
-    name: eth3
-    nictype: bridged
-    parent: maasbr3
-    type: nic
-  eth4:
     ipv4.address: 192.168.100.2
     name: eth4
     nictype: bridged
@@ -79,17 +67,30 @@ EOF
 
 sudo brctl addbr maasbr0 >> $LOG 2>&1
 sudo brctl addbr maasbr1 >> $LOG 2>&1
-sudo brctl addbr maasbr2 >> $LOG 2>&1
-sudo brctl addbr maasbr3 >> $LOG 2>&1
 
-bash -c "printf \"auto maasbr0\niface maasbr0 inet static\n    address 192.168.110.1/24 \n    bridge_stp off \n\""|sudo tee /etc/network/interfaces.d/mg.cfg >> $LOG 2>&1
-bash -c "printf \"auto maasbr1\niface maasbr1 inet static\n    address 192.168.111.1/24 \n    bridge_stp off \n\""|sudo tee -a /etc/network/interfaces.d/mg.cfg >> $LOG 2>&1
-bash -c "printf \"auto maasbr2\niface maasbr2 inet static\n    address 192.168.112.1/24 \n    bridge_stp off \n\""|sudo tee -a /etc/network/interfaces.d/mg.cfg >> $LOG 2>&1
-bash -c "printf \"auto maasbr3\niface maasbr3 inet static\n    address 192.168.113.1/24 \n    bridge_stp off \n\""|sudo tee -a /etc/network/interfaces.d/mg.cfg >> $LOG 2>&1
+bash -c "echo \"network: {config: disabled}\"| sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg" >> $LOG 2>&1
+bash -c "echo \"network:
+ version: 2
+ renderer: networkd
+ bridges:
+   maasbr0:
+     dhcp4: False
+     dhcp6: False
+     addresses: [ 192.168.110.1/24]
+     parameters:
+       stp: false
+       forward-delay: 0
+   maasbr1:
+     dhcp4: False
+     dhcp6: False
+     addresses: [ 192.168.111.1/24]
+     parameters:
+       stp: false
+       forward-delay: 0
+\"|sudo tee /etc/netplan/51-storage.yaml" >> $LOG 2>&1
 
-set +e
-sudo /etc/init.d/networking restart >> $LOG 2>&1
-set -e
+
+sudo netplan apply >> $LOG 2>&1
 
 sudo iptables -t nat -A POSTROUTING -s 192.168.110.0/24 ! -d 192.168.110.0/24 -m comment --comment "network maasbr0" -j MASQUERADE >> $LOG 2>&1
 sudo iptables -t filter -A INPUT -i maasbr0 -p tcp -m tcp --dport 53 -m comment --comment "network maasbr0" -j ACCEPT >> $LOG 2>&1
@@ -110,7 +111,7 @@ lxc exec maas -- bash -c "echo \"network:
   version: 2
   renderer: networkd
   ethernets:
-    eth4:
+    eth2:
       dhcp4: yes
       dhcp6: False
     eth0:
@@ -121,15 +122,7 @@ lxc exec maas -- bash -c "echo \"network:
       dhcp4: False
       dhcp6: False
       addresses: [192.168.111.2/24]
-    eth2:
-      dhcp4: False
-      dhcp6: False
-      addresses: [192.168.112.2/24]
-    eth3:
-      dhcp4: False
-      dhcp6: False
-      addresses: [192.168.113.2/24]
-\"|sudo tee /etc/netplan/mg.yaml" >> $LOG 2>&1
+\"|sudo tee /etc/netplan/storage.yaml" >> $LOG 2>&1
 
 lxc exec maas -- netplan apply >> $LOG 2>&1
 lxc exec maas -- bash -c "echo \"
@@ -146,7 +139,7 @@ lxc exec maas -- maas maas-root maas set-config name=http_proxy value=http://100
 lxc exec maas -- maas maas-root maas set-config name=enable_http_proxy value=true >> $LOG 2>&1
 lxc exec maas -- maas maas-root sshkeys import lp:marosg  >> $LOG 2>&1
 lxc exec maas -- maas maas-root maas set-config name=completed_intro value=true >> $LOG 2>&1
-lxc exec maas -- maas maas-root boot-source-selections create 1 os="ubuntu" release="xenial" arches="amd64" subarches="*" labels="*" >> $LOG 2>&1
+lxc exec maas -- maas maas-root boot-source-selections create 1 os="ubuntu" release="bionic" arches="amd64" subarches="*" labels="*" >> $LOG 2>&1
 lxc exec maas -- maas maas-root boot-resources import >> $LOG 2>&1
 controller=$(lxc exec maas -- bash -c "maas maas-root  rack-controllers read|grep system_id|cut -d \\\" -f 4|head -n 1") >> $LOG 2>&1
 lxc exec maas -- bash -c "rc=1;while  [ \$rc -ne 0 ] ; do  sleep 10;  maas maas-root rack-controller list-boot-images $controller |grep status |grep synced ; rc=\$?; done" >> $LOG 2>&1

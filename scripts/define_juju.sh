@@ -23,7 +23,7 @@ qemu-img create -f qcow2 ${1}${2}d1.qcow2 40G
 virt-install --noautoconsole --print-xml --boot network,hd,menu=on \
 $GRAPHICS $CONTROLLER --name ${1}${2} --ram $3 --vcpus 2 $CPUOPTS \
 --disk path=${1}${2}d1.qcow2,size=40,$DISKOPTS \
---network=bridge=maasbr0,mac=${4}:${5}:${6}:${7}:${8}:2${2},model=virtio \
+--network=bridge=maasbr0,mac=18:${5}:${6}:${7}:${8}:2${2},model=virtio \
 > ${1}${2}.xml
 
 virsh define ${1}${2}.xml
