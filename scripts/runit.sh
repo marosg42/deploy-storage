@@ -186,12 +186,14 @@ lxc exec maas -- maas maas-root maas set-config name=http_proxy value=http://100
 lxc exec maas -- maas maas-root maas set-config name=enable_http_proxy value=true >> $LOG 2>&1
 lxc exec maas -- maas maas-root sshkeys import lp:marosg  >> $LOG 2>&1
 lxc exec maas -- maas maas-root maas set-config name=completed_intro value=true >> $LOG 2>&1
+set +e
 lxc exec maas -- maas maas-root boot-source-selections create 1 os="ubuntu" release="bionic" arches="amd64" subarches="*" labels="*" >> $LOG 2>&1
+set -e
 lxc exec maas -- maas maas-root boot-resources import >> $LOG 2>&1
 controller=$(lxc exec maas -- bash -c "maas maas-root  rack-controllers read|grep system_id|cut -d \\\" -f 4|head -n 1") >> $LOG 2>&1
 lxc exec maas -- bash -c "rc=1;while  [ \$rc -ne 0 ] ; do  sleep 10;  maas maas-root rack-controller list-boot-images $controller |grep status |grep synced ; rc=\$?; done" >> $LOG 2>&1
-lxc exec maas -- maas maas-root  maas set-config name=default_distro_series value=xenial >> $LOG 2>&1
-lxc exec maas -- maas maas-root  maas set-config name=commissioning_distro_series value=xenial >> $LOG 2>&1
+lxc exec maas -- maas maas-root  maas set-config name=default_distro_series value=bionic >> $LOG 2>&1
+lxc exec maas -- maas maas-root  maas set-config name=commissioning_distro_series value=bionic >> $LOG 2>&1
 lxc exec maas -- maas maas-root subnet update 192.168.110.0/24 gateway_ip=192.168.110.1 >> $LOG 2>&1
 fabric=$(lxc exec maas -- maas maas-root  subnet read 192.168.110.0/24|grep fabric|grep -v id|sed "s/\",//"|sed "s/.*\"//") >> $LOG 2>&1
 lxc exec maas -- maas maas-root ipranges create type=dynamic start_ip=192.168.110.20 end_ip=192.168.110.99 >> $LOG 2>&1
@@ -226,7 +228,8 @@ credentials:
 
 juju add-credential maas-kvm -f cred.yaml --replace >> $LOG 2>&1
 
-sg libvirtd -c deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
+# sg libvirt -c deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
+sudo deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
 
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="juju-" >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=juju >> $LOG 2>&1
@@ -237,8 +240,10 @@ lxc exec maas -- maas maas-root tag update-nodes juju add=${machine} >> $LOG 2>&
 export no_proxy=${no_proxy},$(echo 192.168.110.{1..255} | sed 's/ /,/g'),192.168.100.2 >> $LOG 2>&1
 juju bootstrap maas-kvm juju-kvm --config http-proxy="http://100.107.0.4:1080" --config https-proxy="http://100.107.0.4:1080" --config no-proxy=192.168.100.2,127.0.0.1,$(echo 192.168.110.{1..255} | sed 's/ /,/g') --bootstrap-series=bionic --bootstrap-constraints "tags=juju" >> $LOG 2>&1
 
-sg libvirtd -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
-sg libvirtd -c deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
+# sg libvirt -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
+# sg libvirt -c deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
+sudo deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
+sudo deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
 
 lxc exec maas -- maas maas-root tags create name=ceph >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=swift >> $LOG 2>&1
