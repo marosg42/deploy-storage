@@ -1,0 +1,76 @@
+series: bionic
+machines:
+  "0":
+    constraints: tags=swift
+    series: bionic
+  "1":
+    constraints: tags=swift
+    series: bionic
+  "2":
+    constraints: tags=swift
+    series: bionic
+  "3":
+    constraints: tags=swift
+    series: bionic
+  "4":
+    constraints: tags=swift
+    series: bionic
+  "5":
+    constraints: tags=swift
+    series: bionic
+  "6":
+    constraints: tags=swift
+    series: bionic
+  "7":
+    constraints: tags=swift
+    series: bionic
+  "8":
+    constraints: tags=swift
+    series: bionic
+applications:
+  swift-proxy:
+    charm: cs:bionic/swift-proxy
+    num_units: 3
+    options:
+      vip: "192.168.110.11"
+    to:
+    - lxd:0
+    - lxd:3
+    - lxd:6
+  swift-zone1:
+    charm: cs:bionic/swift-storage
+    num_units: 3
+    options:
+      block-device: sdb sdc sdd sde sdf
+      zone: 1
+    to:
+    - 0
+    - 1
+    - 2
+  swift-zone2:
+    charm: cs:bionic/swift-storage
+    num_units: 3
+    options:
+      block-device: sdb sdc sdd sde sdf
+      zone: 2
+    to:
+    - 3
+    - 4
+    - 5
+  swift-zone3:
+    charm: cs:bionic/swift-storage
+    num_units: 3
+    options:
+      block-device: sdb sdc sdd sde sdf
+      zone: 3
+    to:
+    - 6
+    - 7
+    - 8
+  hacluster-swift:
+    charm: cs:bionic/hacluster
+relations:
+  - [ swift-proxy, swift-zone1 ]
+  - [ swift-proxy, swift-zone2 ]
+  - [ swift-proxy, swift-zone3 ]
+  - [ swift-proxy, hacluster-swift ]
