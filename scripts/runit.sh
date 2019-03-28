@@ -228,8 +228,9 @@ credentials:
 
 juju add-credential maas-kvm -f cred.yaml --replace >> $LOG 2>&1
 
-# sg libvirt -c deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
-sudo deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
+export LIBVIRT_DEFAULT_URI=qemu:///system
+sg libvirt -c deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
+# sudo deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
 
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="juju-" >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=juju >> $LOG 2>&1
@@ -240,10 +241,10 @@ lxc exec maas -- maas maas-root tag update-nodes juju add=${machine} >> $LOG 2>&
 export no_proxy=${no_proxy},$(echo 192.168.110.{1..255} | sed 's/ /,/g'),192.168.100.2 >> $LOG 2>&1
 juju bootstrap maas-kvm juju-kvm --config http-proxy="http://100.107.0.4:1080" --config https-proxy="http://100.107.0.4:1080" --config no-proxy=192.168.100.2,127.0.0.1,$(echo 192.168.110.{1..255} | sed 's/ /,/g') --bootstrap-series=bionic --bootstrap-constraints "tags=juju" >> $LOG 2>&1
 
-# sg libvirt -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
-# sg libvirt -c deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
-sudo deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
-sudo deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
+sg libvirt -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
+sg libvirt -c deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
+# sudo deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
+# sudo deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
 
 lxc exec maas -- maas maas-root tags create name=ceph >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=swift >> $LOG 2>&1
