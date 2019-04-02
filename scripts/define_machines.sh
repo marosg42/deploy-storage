@@ -42,7 +42,7 @@ set +x
 
 }
 
-for i in $(seq 1 9); do
-  define swift ${i} 8192 $(date +"%y %m %H %M %S")
-  define ceph ${i} 8192 $(date +"%y %m %H %M %S")
+for i in $(seq 1 6); do
+  define ceph-lum ${i} 4096 $(date +"%y %m %H %M %S")
+  define ceph-jewel ${i} 4096 $(date +"%y %m %H %M %S")
 done

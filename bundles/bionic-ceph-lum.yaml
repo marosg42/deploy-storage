@@ -1,43 +1,34 @@
 series: bionic
 machines:
   "0":
-    constraints: tags=ceph
+    constraints: tags=ceph-lum
     series: bionic
   "1":
-    constraints: tags=ceph
+    constraints: tags=ceph-lum
     series: bionic
   "2":
-    constraints: tags=ceph
+    constraints: tags=ceph-lum
     series: bionic
   "3":
-    constraints: tags=ceph
+    constraints: tags=ceph-lum
     series: bionic
   "4":
-    constraints: tags=ceph
+    constraints: tags=ceph-lum
     series: bionic
   "5":
-    constraints: tags=ceph
-    series: bionic
-  "6":
-    constraints: tags=ceph
-    series: bionic
-  "7":
-    constraints: tags=ceph
-    series: bionic
-  "8":
-    constraints: tags=ceph
+    constraints: tags=ceph-lum
     series: bionic
 applications:
-  ceph-mon:
+  ceph-mon-lum:
     charm: cs:bionic/ceph-mon
     num_units: 3
     to:
     - lxd:0
     - lxd:1
     - lxd:2
-  ceph-osd:
+  ceph-osd-lum:
     charm: cs:bionic/ceph-osd
-    num_units: 9
+    num_units: 6
     options:
       osd-devices: /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
       autotune: true
@@ -49,10 +40,7 @@ applications:
     - 3
     - 4
     - 5
-    - 6
-    - 7
-    - 8
-  ceph-radosgw:
+  ceph-radosgw-lum:
     charm: cs:bionic/ceph-radosgw
     num_units: 3
     options:
@@ -62,9 +50,9 @@ applications:
     - lxd:3
     - lxd:4
     - lxd:5
-  hacluster-radosgw:
+  hacluster-radosgw-lum:
     charm: cs:bionic/hacluster
 relations:
-  - [ ceph-osd, ceph-mon ]
-  - [ ceph-radosgw, ceph-mon ]
-  - [ ceph-radosgw, hacluster-radosgw ]
+  - [ ceph-osd-lum, ceph-mon-lum ]
+  - [ ceph-radosgw-lum, ceph-mon-lum ]
+  - [ ceph-radosgw-lum, hacluster-radosgw-lum ]

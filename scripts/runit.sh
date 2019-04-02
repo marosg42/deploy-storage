@@ -188,6 +188,7 @@ lxc exec maas -- maas maas-root sshkeys import lp:marosg  >> $LOG 2>&1
 lxc exec maas -- maas maas-root maas set-config name=completed_intro value=true >> $LOG 2>&1
 set +e
 lxc exec maas -- maas maas-root boot-source-selections create 1 os="ubuntu" release="bionic" arches="amd64" subarches="*" labels="*" >> $LOG 2>&1
+lxc exec maas -- maas maas-root boot-source-selections create 1 os="ubuntu" release="xenial" arches="amd64" subarches="*" labels="*" >> $LOG 2>&1
 set -e
 lxc exec maas -- maas maas-root boot-resources import >> $LOG 2>&1
 controller=$(lxc exec maas -- bash -c "maas maas-root  rack-controllers read|grep system_id|cut -d \\\" -f 4|head -n 1") >> $LOG 2>&1
@@ -205,6 +206,7 @@ lxc exec maas -- sudo -u maas sh -c "cat /var/lib/maas/.ssh/id_rsa.pub" >> $LOG 
 echo  $(lxc exec maas -- sudo -u maas sh -c "cat /var/lib/maas/.ssh/id_rsa.pub") >> ~ubuntu/.ssh/authorized_keys 2>>$LOG
 lxc exec maas -- sudo -u maas sh -c "printf 'yes\n'|ssh -o StrictHostKeyChecking=no ubuntu@192.168.110.1 hostname" >> $LOG 2>&1
 sudo snap install juju --classic >> $LOG 2>&1
+sudo snap install juju-wait --classic >> $LOG 2>&1
 
 sleep 5
 
@@ -230,7 +232,6 @@ juju add-credential maas-kvm -f cred.yaml --replace >> $LOG 2>&1
 
 export LIBVIRT_DEFAULT_URI=qemu:///system
 sg libvirt -c deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
-# sudo deploy-storage/scripts/define_juju.sh >> $LOG 2>&1
 
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="juju-" >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=juju >> $LOG 2>&1
@@ -243,22 +244,20 @@ juju bootstrap maas-kvm juju-kvm --config http-proxy="http://100.107.0.4:1080" -
 
 sg libvirt -c deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
 sg libvirt -c deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
-# sudo deploy-storage/scripts/define_machines.sh >> $LOG 2>&1
-# sudo deploy-storage/scripts/define_monitoring.sh >> $LOG 2>&1
 
-lxc exec maas -- maas maas-root tags create name=ceph >> $LOG 2>&1
-lxc exec maas -- maas maas-root tags create name=swift >> $LOG 2>&1
+lxc exec maas -- maas maas-root tags create name=ceph-lum >> $LOG 2>&1
+lxc exec maas -- maas maas-root tags create name=ceph-jewel >> $LOG 2>&1
 lxc exec maas -- maas maas-root tags create name=monitoring >> $LOG 2>&1
-lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="ceph" >> $LOG 2>&1
-lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="swift" >> $LOG 2>&1
+lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="ceph-lum" >> $LOG 2>&1
+lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="ceph-jewel" >> $LOG 2>&1
 lxc exec maas -- maas maas-root machines add-chassis chassis_type=virsh hostname=qemu+ssh://ubuntu@192.168.100.1/system prefix_filter="monitoring" >> $LOG 2>&1
 set +x
-machines_ceph=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=ceph${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
-machines_swift=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=swift${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
-machines_monitoring=$(for i in $(seq 1 9); do lxc exec maas -- bash -c "maas maas-root machines read hostname=monitoring${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
+machines_ceph_lum=$(for i in $(seq 1 6); do lxc exec maas -- bash -c "maas maas-root machines read hostname=ceph-lum${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
+machines_ceph_jewel=$(for i in $(seq 1 6); do lxc exec maas -- bash -c "maas maas-root machines read hostname=ceph-jewel${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
+machines_monitoring=$(for i in $(seq 1 3); do lxc exec maas -- bash -c "maas maas-root machines read hostname=monitoring${i}|grep system_id|cut -d \\\" -f 4|head -n 1"; done) >> $LOG 2>&1
 set -x
-for i in ${machines_ceph}; do lxc exec maas -- maas maas-root tag update-nodes ceph add=${i}; done >> $LOG 2>&1
-for i in ${machines_swift}; do lxc exec maas -- maas maas-root tag update-nodes swift add=${i}; done >> $LOG 2>&1
+for i in ${machines_ceph_lum}; do lxc exec maas -- maas maas-root tag update-nodes ceph-lum add=${i}; done >> $LOG 2>&1
+for i in ${machines_ceph_jewel}; do lxc exec maas -- maas maas-root tag update-nodes ceph-jewel add=${i}; done >> $LOG 2>&1
 for i in ${machines_monitoring}; do lxc exec maas -- maas maas-root tag update-nodes monitoring add=${i}; done >> $LOG 2>&1
 
 # commision all
@@ -267,12 +266,14 @@ lxc exec maas -- bash -c "rc=0;while  [ \$rc -eq 0 ] ; do  sleep 30; maas maas-r
 
 sleep 10
 
-juju deploy deploy-storage/bundles/bionic-ceph.yaml >> $LOG 2>&1
-juju deploy deploy-storage/bundles/bionic-swift.yaml >> $LOG 2>&1
+juju deploy deploy-storage/bundles/bionic-ceph-lum.yaml >> $LOG 2>&1
+juju-wait -w -t 3600 >> $LOG 2>&1
+juju deploy deploy-storage/bundles/bionic-ceph-jewel.yaml >> $LOG 2>&1
+juju-wait -w -t 3600 >> $LOG 2>&1
 juju deploy deploy-storage/bundles/bionic-monitoring.yaml >> $LOG 2>&1
-juju relate prometheus-ceph-exporter ceph-mon:client >> $LOG 2>&1
-juju relate telegraf ceph-mon >> $LOG 2>&1
-juju relate telegraf ceph-osd >> $LOG 2>&1
+# juju relate prometheus-ceph-exporter ceph-mon:client >> $LOG 2>&1
+# juju relate telegraf ceph-mon >> $LOG 2>&1
+# juju relate telegraf ceph-osd >> $LOG 2>&1
 
 set +x
 watch -c -- juju status --color

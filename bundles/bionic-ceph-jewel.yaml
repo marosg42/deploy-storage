@@ -1,0 +1,44 @@
+series: xenial
+machines:
+  "0":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "1":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "2":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "3":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "4":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "5":
+    constraints: tags=ceph-jewel
+    series: xenial
+applications:
+  ceph-mon-jewel:
+    charm: cs:ceph-mon
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+  ceph-osd-jewel:
+    charm: cs:ceph-osd
+    num_units: 6
+    options:
+      osd-devices: /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+      autotune: true
+      aa-profile-mode: complain
+    to:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+relations:
+  - [ ceph-osd-jewel, ceph-mon-jewel ]
