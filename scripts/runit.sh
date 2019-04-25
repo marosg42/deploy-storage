@@ -266,14 +266,13 @@ lxc exec maas -- bash -c "rc=0;while  [ \$rc -eq 0 ] ; do  sleep 30; maas maas-r
 
 sleep 10
 
-juju deploy deploy-storage/bundles/bionic-ceph-lum.yaml >> $LOG 2>&1
-juju-wait -w -t 3600 >> $LOG 2>&1
-juju deploy deploy-storage/bundles/bionic-ceph-jewel.yaml >> $LOG 2>&1
-juju-wait -w -t 3600 >> $LOG 2>&1
-juju deploy deploy-storage/bundles/bionic-monitoring.yaml >> $LOG 2>&1
+juju deploy deploy-storage/bundles/lum_and_jewel.yaml >> $LOG 2>&1
+sleep 30
+juju status
+juju-wait -w -r 5 -t 3600 >> $LOG 2>&1
 # juju relate prometheus-ceph-exporter ceph-mon:client >> $LOG 2>&1
 # juju relate telegraf ceph-mon >> $LOG 2>&1
 # juju relate telegraf ceph-osd >> $LOG 2>&1
 
 set +x
-watch -c -- juju status --color
+juju status

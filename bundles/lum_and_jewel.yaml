@@ -1,0 +1,210 @@
+machines:
+  "0":
+    constraints: tags=ceph-lum
+    series: bionic
+  "1":
+    constraints: tags=ceph-lum
+    series: bionic
+  "2":
+    constraints: tags=ceph-lum
+    series: bionic
+  "3":
+    constraints: tags=ceph-lum
+    series: bionic
+  "4":
+    constraints: tags=ceph-lum
+    series: bionic
+  "5":
+    constraints: tags=ceph-lum
+    series: bionic
+  "6":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "7":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "8":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "9":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "10":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "11":
+    constraints: tags=ceph-jewel
+    series: xenial
+  "12":
+    constraints: tags=monitoring
+    series: bionic
+  "13":
+    constraints: tags=monitoring
+    series: bionic
+  "14":
+    constraints: tags=monitoring
+    series: bionic
+applications:
+  ceph-mon-lum:
+    charm: cs:bionic/ceph-mon
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+  ceph-osd-lum:
+    charm: cs:bionic/ceph-osd
+    num_units: 6
+    options:
+      osd-devices: /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+      autotune: true
+      aa-profile-mode: complain
+    to:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+  ceph-radosgw-lum:
+    charm: cs:bionic/ceph-radosgw
+    num_units: 3
+    options:
+      vip: "192.168.110.10"
+      restrict-ceph-pools: False
+    to:
+    - lxd:3
+    - lxd:4
+    - lxd:5
+  hacluster-radosgw-lum:
+    charm: cs:bionic/hacluster
+  ceph-mon-jewel:
+    charm: cs:ceph-mon
+    series: xenial
+    num_units: 3
+    to:
+    - lxd:6
+    - lxd:7
+    - lxd:8
+  ceph-osd-jewel:
+    charm: cs:ceph-osd
+    series: xenial
+    num_units: 6
+    options:
+      osd-devices: /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+      autotune: true
+      aa-profile-mode: complain
+    to:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+  prometheus:
+    charm: cs:bionic/prometheus2
+    num_units: 1
+    to:
+    - "12"
+  telegraf:
+    charm: cs:bionic/telegraf
+  prometheus-ceph-exporter:
+    charm: cs:bionic/prometheus-ceph-exporter
+    num_units: 1
+    to:
+    - lxd:0
+  grafana:
+    charm: cs:bionic/grafana
+    num_units: 1
+    expose: true
+    options:
+      http_proxy: http://100.107.0.4:1080/
+      install_method: snap
+      snap_proxy: http://100.107.0.4:1080
+      admin_password: zlinux
+    to:
+    - "13"
+  nagios:
+    charm: cs:nagios
+    num_units: 1
+    expose: true
+    options:
+      password: zlinux
+    to:
+    - "14"
+  nagios-xenial:
+    charm: cs:nagios
+    num_units: 1
+    expose: true
+    series: xenial
+    options:
+      password: zlinux
+    to:
+    - lxd:14
+  nrpe-host:
+    charm: cs:nrpe
+    options:
+      nagios_hostname_type: "host"
+      xfs_errors: "30"
+      conntrack: ''      
+  nrpe-container:
+    charm: cs:nrpe
+    options:
+      nagios_hostname_type: "unit"
+      disk_root: ''
+      load: ''
+      swap: ''
+      swap_activity: ''
+      mem: ''
+      conntrack: ''
+  nrpe-host-xenial:
+    charm: cs:nrpe
+    options:
+      nagios_hostname_type: "host"
+      xfs_errors: "30"
+      conntrack: ''
+  nrpe-container-xenial:
+    charm: cs:nrpe
+    options:
+      nagios_hostname_type: "unit"
+      disk_root: ''
+      load: ''
+      swap: ''
+      swap_activity: ''
+      mem: ''
+      conntrack: ''
+  ntp:
+    charm: cs:ntp
+
+relations:
+  - [ ntp, ceph-osd-lum ]
+  - [ ntp, ceph-osd-jewel ]
+  - [ ntp, nagios ]
+  - [ ntp, grafana ]
+  - [ ntp, prometheus ]
+  - [ ceph-osd-lum, ceph-mon-lum ]
+  - [ ceph-radosgw-lum, ceph-mon-lum ]
+  - [ ceph-radosgw-lum, hacluster-radosgw-lum ]
+  - [ ceph-osd-jewel, ceph-mon-jewel ]
+  - [ prometheus-ceph-exporter, "ceph-mon-lum:client" ]
+  - [ "prometheus-ceph-exporter:ceph-exporter", "prometheus:target" ]
+  - [ "prometheus:grafana-source", "grafana:grafana-source" ]
+  - [ "telegraf:prometheus-client", "prometheus:target" ]
+  - [ telegraf, prometheus-ceph-exporter  ]
+  - [ "telegraf:juju-info", "prometheus:juju-info" ]
+  - [ telegraf, ceph-mon-lum ]
+  - [ telegraf, ceph-osd-lum ]
+  - [ telegraf, ceph-radosgw-lum ]
+  - [ telegraf, grafana ]
+  - [ nrpe-container, ceph-mon-lum ]
+  - [ nrpe-host, ceph-osd-lum ]
+  - [ nrpe-container, ceph-radosgw-lum ]
+  - [ nrpe-host, grafana ]
+  - [ nrpe-host, prometheus ]
+  - [ nrpe-container, prometheus-ceph-exporter ]
+  - [ nrpe-host, nagios ]
+  - [ nrpe-container, nagios ]
+  - [ nrpe-container-xenial, ceph-mon-jewel ]
+  - [ nrpe-host-xenial, ceph-osd-jewel ]
+  - [ nrpe-host-xenial, nagios-xenial ]
+  - [ nrpe-container-xenial, nagios-xenial ]

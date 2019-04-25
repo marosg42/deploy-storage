@@ -17,21 +17,21 @@ CONTROLLER="--controller scsi,model=virtio-scsi,index=0"
 DISKOPTS="format=qcow2,bus=scsi,cache=writeback"
 export CPUOPTS GRAPHICS CONTROLLER DISKOPTS
 
-qemu-img create -f qcow2 ${1}${2}d1.qcow2 40G
-qemu-img create -f qcow2 ${1}${2}d2.qcow2 20G
-qemu-img create -f qcow2 ${1}${2}d3.qcow2 20G
-qemu-img create -f qcow2 ${1}${2}d4.qcow2 20G
-qemu-img create -f qcow2 ${1}${2}d5.qcow2 20G
-qemu-img create -f qcow2 ${1}${2}d6.qcow2 20G
+qemu-img create -f qcow2 VMs/${1}${2}d1.qcow2 40G
+qemu-img create -f qcow2 VMs/${1}${2}d2.qcow2 20G
+qemu-img create -f qcow2 VMs/${1}${2}d3.qcow2 20G
+qemu-img create -f qcow2 VMs/${1}${2}d4.qcow2 20G
+qemu-img create -f qcow2 VMs/${1}${2}d5.qcow2 20G
+qemu-img create -f qcow2 VMs/${1}${2}d6.qcow2 20G
 
 virt-install --noautoconsole --print-xml --boot network,hd,menu=on \
 $GRAPHICS $CONTROLLER --name ${1}${2} --ram $3 --vcpus 2 $CPUOPTS \
---disk path=${1}${2}d1.qcow2,size=40,$DISKOPTS \
---disk path=${1}${2}d2.qcow2,size=20,$DISKOPTS \
---disk path=${1}${2}d3.qcow2,size=20,$DISKOPTS \
---disk path=${1}${2}d4.qcow2,size=20,$DISKOPTS \
---disk path=${1}${2}d5.qcow2,size=20,$DISKOPTS \
---disk path=${1}${2}d6.qcow2,size=20,$DISKOPTS \
+--disk path=VMs/${1}${2}d1.qcow2,size=40,$DISKOPTS \
+--disk path=VMs/${1}${2}d2.qcow2,size=20,$DISKOPTS \
+--disk path=VMs/${1}${2}d3.qcow2,size=20,$DISKOPTS \
+--disk path=VMs/${1}${2}d4.qcow2,size=20,$DISKOPTS \
+--disk path=VMs/${1}${2}d5.qcow2,size=20,$DISKOPTS \
+--disk path=VMs/${1}${2}d6.qcow2,size=20,$DISKOPTS \
 --network=bridge=maasbr0,mac=18:${5}:${6}:${7}:${8}:1${2},model=virtio \
 --network=bridge=maasbr1,mac=18:${5}:${6}:${7}:${8}:2${2},model=virtio \
 > ${1}${2}.xml
